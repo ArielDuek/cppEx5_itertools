@@ -1,50 +1,91 @@
-namespace itertools{
-    template<class T >
-    class accumulate{
-    protected:
-        T container;
-    public:
-        accumulate(T c):container(c){}
+#pragma once
+#include <iostream>
+#include <vector>
+#include <iterator>
 
+namespace itertools{
+    template<class C,class F> class accumulate{
+
+    protected:
+        //Fields
+        const C& container;
+        const F& function;
+    public:
+
+        accumulate(const C& c,const F& f=[](int x, int y){return x+y;}):container(c),function(f){} //Constructor
+
+        //inner class
         class iterator {
 
         private:
-            accumulate<T> acc;
+            //Fields
+            const accumulate& acc;
+            decltype(container.begin()) iter; //for pass over the container
+            typename std::decay<decltype(*(container.begin()))>::type res;
+
+            /*
+             * NOTES:
+             * Decltype is sort of an operator that evaluates the type of passed expression
+             * -for the iter we needed the same type of iterator of the container and that what the begin function returns
+             * and the decltype is recognize it.
+             * -How ever in the res we needed the actual type of the element in the container דo that we can put the
+             * result of the calculation done with the function. that the reason we do decltype(*(container.begin()))
+             * and NOT decltype(container.begin()).
+             *
+             * The decay type of T is the same type that results from the standard conversions that happen when an lvalue
+             * expression is used as an rvalue
+             */
+
         public:
-            iterator(accumulate<T> a): acc(a){}
+            //Constructor
+            iterator(const accumulate& a,decltype(container.begin()) i)
+                    : acc(a),iter(i)
+            {
 
-            T& operator*() const {
-                //return *pointer_to_current_node;
-                return pointer_to_current_node->m_value;
+                res=*i;
             }
 
-            T* operator->() const {
-                return &(pointer_to_current_node->m_value);
+            auto operator*() const {
+                return res;
             }
 
-            // ++i;
+            //++iter
             iterator& operator++() {
-                //++pointer_to_current_node;
-                pointer_to_current_node = pointer_to_current_node->m_next;
-                return *this;
+                ++iter;
+                if(iter!=acc.container.end())
+                {
+                    res=acc.function(res,*(iter));
+                }
+                return *this; //return current iter after ++iter
             }
 
-            // i++;
-            // Usually iterators are passed by value and not by const& as they are small.
+            //iter++
             const iterator operator++(int) {
-                iterator tmp= *this;
-                pointer_to_current_node= pointer_to_current_node->m_next;
-                return tmp;
+                iterator tmp=*this; //save
+                iter++;
+                if(iter!=acc.container.end())
+                {
+                    res=acc.function(res,*(iter));
+                }
+                return *tmp; //return current iter after ++iter
             }
 
-            bool operator==(const iterator& rhs) const {
-                return pointer_to_current_node == rhs.pointer_to_current_node;
+            bool operator==(const iterator& iterator) const {
+                return iterator.iter==iter;
             }
 
-            bool operator!=(const iterator& rhs) const {
-                return pointer_to_current_node != rhs.pointer_to_current_node;
+            bool operator!=(const iterator& iterator) const {
+                return iterator.iter!=iter;
             }
-        };  // END OF CLASS ITERATOR
-        
+        }; //End iterator
+
+
+        iterator begin() const {
+            return iterator(*this,container.begin());
+        }
+
+        iterator end() const {
+            return iterator(*this, container.end());
+        }
     };
 }
