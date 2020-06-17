@@ -1,7 +1,8 @@
 namespace itertools{
     class range{
-    public:
+    private:
         int intBegin , intEnd;
+    public:
         range(int b, int e): intBegin(b),intEnd(e){}
     private:
         class iterator{
@@ -37,11 +38,11 @@ namespace itertools{
         };
 
     public:
-        iterator begin() {
+        iterator begin() const  {
             return iterator(intBegin);
         }
 
-        iterator end() {
+        iterator end() const {
             return iterator(intEnd);
         }
     };

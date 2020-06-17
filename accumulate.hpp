@@ -3,16 +3,24 @@
 #include <vector>
 #include <iterator>
 
+typedef struct {
+    template <typename T>
+    auto operator()(const T& x , const T& y) const{
+        return x+y;
+    }
+} sum;
+
 namespace itertools{
-    template<class C,class F> class accumulate{
+    template<class C,class F = sum>
+    class accumulate{
 
     protected:
         //Fields
         const C& container;
         const F& function;
     public:
-
-        accumulate(const C& c,const F& f=[](int x, int y){return x+y;}):container(c),function(f){} //Constructor
+//        accumulate( C& c):container(c),function(sum()){} //Constructor
+        accumulate(const C& c, const F& f=sum()):container(c),function(f){} //Constructor
 
         //inner class
         class iterator {
@@ -41,7 +49,7 @@ namespace itertools{
             iterator(const accumulate& a,decltype(container.begin()) i)
                     : acc(a),iter(i)
             {
-
+                if (i != acc.container.end())
                 res=*i;
             }
 
